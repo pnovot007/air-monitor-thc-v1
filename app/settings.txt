@@ -1,0 +1,2 @@
+List of used board packages and used libraries including URLs
+-------------------------------------------------------------
