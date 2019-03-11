@@ -1,2 +1,12 @@
 List of used board packages and used libraries including URLs
 -------------------------------------------------------------
+//ESP8266	http://arduino.esp8266.com/stable/package_esp8266com_index.json	File-Preferences-Settings-Additional Boards Manager URLs
+
+board=d1_mini
+boardsmanager.additional.urls=http://arduino.esp8266.com/stable/package_esp8266com_index.json
+build.verbose=false
+
+//SCD30	https://github.com/sparkfun/SparkFun_SCD30_Arduino_Library.git
+//OLED	https://github.com/squix78/esp8266-oled-ssd1306.git
+//WS2812	https://github.com/Makuna/NeoPixelBus.git
+//PDS9930	https://github.com/Depau/APDS9930.git

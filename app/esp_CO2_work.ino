@@ -1,4 +1,4 @@
-https://github.com/pnovot007/air-monitor-thc-v1.git
+//https://github.com/pnovot007/air-monitor-thc-v1.git
 
 bool deb= false;
 
@@ -11,7 +11,7 @@ byte error;
 const byte oled = 0x3c;
 SSD1306 display(oled, D1, D2);
 
-//LED
+//LED https://github.com/Makuna/NeoPixelBus.git
 #include <NeoPixelBus.h>
 const uint16_t PixelCount = 4; // this example assumes 4 pixels, making it smaller will cause a failure
 #define colorSaturation 255
@@ -34,14 +34,14 @@ struct MyAnimationState
 };
 MyAnimationState animationState[PixelCount];
 
-// APDS9930 proximity & ambient light
+// APDS9930 proximity & ambient light https://github.com/Depau/APDS9930.git
 #include <APDS9930.h>
 APDS9930 apds = APDS9930();
 uint16_t proximity_data = 0;
 float ambient_light = 0; // can also be an unsigned long
 long hold_time=0;
 
-//CO2 SDC30 http://librarymanager/All#SparkFun_SCD30
+//CO2 SDC30 https://github.com/sparkfun/SparkFun_SCD30_Arduino_Library.git
 #include "SparkFun_SCD30_Arduino_Library.h" 
 SCD30 airSensor;
 String CO2, temp, hum;
