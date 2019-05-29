@@ -98,21 +98,51 @@ mylength = 80+4;
 mywidth = 35+4;
 myhight = 20+2;
 mythickness = 2;
+mychamber_length = 27;
 airholes_size = min(mywidth, myhight)*0.8;
 
 // Create box
-box (mylength, mywidth, myhight, mythickness);
-// Deviders
-translate ([27 + mythickness/2 + mythickness, 0, 0])
-    rotate (-90, [0,1,0])
-        plate (myhight, mywidth, 2);
-translate ([mylength - 27 - (mythickness/2 + mythickness), 0, 0])
-    rotate (-90, [0,1,0])
-        plate (myhight, mywidth, 2);
+module create_box(){
+    // Create outer shell
+    box (mylength, mywidth, myhight, mythickness);
+    // Deviders
+    translate ([mychamber_length + mythickness/2 + mythickness, 0, 0])
+        rotate (-90, [0,1,0])
+            plate (myhight, mywidth, 2);
+    translate ([mylength - mychamber_length - (mythickness/2 + mythickness), 0, 0])
+        rotate (-90, [0,1,0])
+            plate (myhight, mywidth, 2);
+}
+
+module create_holes(){
+    translate ([(mychamber_length)/2+mythickness, mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
+        rotate (90, [1,0,0])
+            airholes (airholes_size, mythickness*2);
+    translate ([(mychamber_length)/2+mythickness, mywidth-mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
+        rotate (90, [1,0,0])
+            airholes (airholes_size, mythickness*2);
+
+    translate ([mylength-(mychamber_length)/2-mythickness, mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
+        rotate (90, [1,0,0])
+            airholes (airholes_size, mythickness*2);
+    translate ([mylength-(mychamber_length)/2-mythickness, mywidth-mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
+        rotate (90, [1,0,0])
+            airholes (airholes_size, mythickness*2);
+
+    translate ([mythickness/2, mywidth/2, airholes_size/2+(myhight-airholes_size)/2])
+        rotate (90, [0,1,0])
+            airholes (airholes_size, mythickness*2);
+    translate ([mylength-mythickness/2, mywidth/2, airholes_size/2+(myhight-airholes_size)/2])
+        rotate (90, [0,1,0])
+            airholes (airholes_size, mythickness*2);
 
 
-rotate (90, [1,0,0])
-translate ([airholes_size/2, mythickness/2, airholes_size/2])
-airholes (airholes_size, mythickness);
+}
 
+//#create_holes();
+difference()
+{
+    create_box();
+    create_holes();
+}
 
