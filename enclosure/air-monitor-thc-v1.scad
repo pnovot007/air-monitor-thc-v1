@@ -108,9 +108,9 @@ $fn=36;
 mylength = 80+4;
 mywidth = 35+4;
 myhight = 20+2+2+5;
-myoverhang = 4;
 mydevider_reduction = 4;
 mythickness = 2;
+myoverhang = mythickness*2;
 mychamber_length = 27;
 airholes_size = min(mywidth, myhight)*0.8;
 mycable_hole_width = 12;
@@ -155,15 +155,38 @@ module create_holes(){
     translate ([mylength-mythickness/2, mywidth/2, airholes_size/2+(myhight-airholes_size)/2])
         rotate (90, [0,1,0])
             airholes (airholes_size, mythickness*2);
-
-
 }
 
-
-//#create_holes();
-difference()
+module create_notch (length, width, hight, thickness)
 {
-    create_box();
-    create_holes();
+    thickness_addition = 0.2;
+    //width_reduction = -0.2;
+    translate ([thickness/2-thickness_addition, thickness/2-thickness_addition, hight+thickness/2])
+        plate (length, width-thickness+2*thickness_addition, thickness+2*thickness_addition);
+
 }
 
+///////////////////////////////////////////
+module complete_box()
+    {
+        
+    difference ()
+    {
+        difference()
+        {
+            create_box();
+            create_holes();
+        }
+    create_notch(mylength, mywidth, myhight, mythickness);    
+    }
+}
+module complete_lid()
+{
+    translate ([mythickness/2, mythickness/2, mythickness/2])
+        plate (mylength-mythickness/2, mywidth-mythickness, mythickness); 
+}
+
+///////////////////////////////////////////
+complete_box();
+translate ([-mylength-10,0,0])
+complete_lid();
