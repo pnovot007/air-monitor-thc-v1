@@ -1,4 +1,12 @@
-// enclosure for air-monitor-thc-v1
+/*
+ * Enclosure for air-monitor-thc-v1
+ * 
+ */
+myversion = "v0.1";
+/*
+ *
+ */
+
 module plate (length, width, thickness)
 {
 /*
@@ -108,53 +116,80 @@ $fn=36;
 mylength = 80+4;
 mywidth = 35+4;
 myhight = 20+2+2+5;
-mydevider_reduction = 4;
 mythickness = 2;
 myoverhang = mythickness*2;
-mychamber_length = 27;
+mychamber_length = 27; // Internal size of chamber
 airholes_size = min(mywidth, myhight)*0.8;
 mycable_hole_width = 12;
 mycable_hole_height = 8;
-mycable_hole_position_z = 17;
+mycable_hole_position_z = 1;
+myinternal_elevation_hight = 9;
+myinternal_elevation_width = 3;
+mydevider_hight = myinternal_elevation_hight + 15; // elevation + hight of the circuit pillar element
 
 // Create box
 module create_box(){
+
     // Create outer shell
     box (mylength, mywidth, myhight, mythickness, myoverhang);
+
     // Deviders
     translate ([mychamber_length + mythickness/2 + mythickness, 0, 0])
         rotate (-90, [0,1,0])
-            plate (myhight - mydevider_reduction, mywidth, 2);
+            plate (mydevider_hight, mywidth, 2);
+
     translate ([mylength - mychamber_length - (mythickness/2 + mythickness), 0, 0])
         rotate (-90, [0,1,0])
-            plate (myhight- mydevider_reduction, mywidth, 2);
+            plate (mydevider_hight, mywidth, 2);
+
+
+    // Internal elevators
+    translate([mythickness, mythickness, mythickness])
+        cube([myinternal_elevation_width, mywidth-2*mythickness, myinternal_elevation_hight]);
+
+    translate([mychamber_length-0.5*mythickness, mythickness, mythickness])
+        cube([myinternal_elevation_width, mywidth-2*mythickness, myinternal_elevation_hight]);
+
+
+    translate([mylength-mychamber_length-mythickness, mythickness, mythickness])
+        cube([myinternal_elevation_width, mywidth-2*mythickness, myinternal_elevation_hight]);
+
+    translate([mylength-2.5*mythickness, mythickness, mythickness])
+        cube([myinternal_elevation_width, mywidth-2*mythickness, myinternal_elevation_hight]);
+
+
 }
 
 module create_holes(){
-    translate ([(mychamber_length)/2+mythickness, mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
+
+    translate ([(mychamber_length)/2+mythickness, mythickness/2,  mycable_hole_position_z+mythickness+myinternal_elevation_hight])
+       rotate (90, [1,0,0])
+            cable_hole (mycable_hole_width, mycable_hole_height, mythickness*2);    
+
+    /*translate ([(mychamber_length)/2+mythickness, mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
         rotate (90, [1,0,0])
             airholes (airholes_size, mythickness*2);
+    */
+    
     translate ([(mychamber_length)/2+mythickness, mywidth-mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
         rotate (90, [1,0,0])
             airholes (airholes_size, mythickness*2);
 
-    /*translate ([mylength-(mychamber_length)/2-mythickness, mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
+    translate ([mylength-(mychamber_length)/2-mythickness, mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
         rotate (90, [1,0,0])
-            airholes (airholes_size, mythickness*2);*/
-    translate ([mylength-(mychamber_length)/2-mythickness, mythickness/2,  mycable_hole_position_z+mythickness])
-       rotate (90, [1,0,0])
-            cable_hole (mycable_hole_width, mycable_hole_height, mythickness*2);    
+            airholes (airholes_size, mythickness*2);
     
     translate ([mylength-(mychamber_length)/2-mythickness, mywidth-mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
         rotate (90, [1,0,0])
             airholes (airholes_size, mythickness*2);
 
+    // Front and back holes
     translate ([mythickness/2, mywidth/2, airholes_size/2+(myhight-airholes_size)/2])
         rotate (90, [0,1,0])
-            airholes (airholes_size, mythickness*2);
+            airholes (airholes_size, mythickness*2+2*myinternal_elevation_width);
     translate ([mylength-mythickness/2, mywidth/2, airholes_size/2+(myhight-airholes_size)/2])
         rotate (90, [0,1,0])
-            airholes (airholes_size, mythickness*2);
+            airholes (airholes_size, mythickness*2+2*myinternal_elevation_width);
 }
 
 module create_notch (length, width, hight, thickness)
