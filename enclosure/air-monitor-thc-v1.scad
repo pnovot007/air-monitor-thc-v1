@@ -2,7 +2,7 @@
  * Enclosure for air-monitor-thc-v1
  * 
  */
-myversion = "v0.1";
+myversion = "v0.11";
 /*
  *
  */
@@ -57,6 +57,9 @@ module round_airholes (number, width, thickness)
  * @thickness determines also width of each airhole
  *
  */
+/*
+ * NOT USED
+ */
 {
     // cylinder should be higher than thickness of the material
     translate ([-thickness/2, 0, 0 ])
@@ -107,7 +110,7 @@ module cable_hole (width, hight, thickness)
 {
     translate ([0,0,-thickness])
         linear_extrude(thickness*2)
-            polygon (points = [[-width/2,-hight/2], [width/2,-hight/2], [width/2,hight/2], [0,hight], [-width/2,hight/2]]);
+            polygon (points = [[-width/2,-hight/2], [width/2,-hight/2], [width/2,hight/2], [-width/2,hight/2]]);
 }
 
 
@@ -201,24 +204,41 @@ module create_notch (length, width, hight, thickness)
 
 }
 
+module engrave_version(x_start_position=0, y_start_position=0)
+{
+    fontsize = 5;
+    depth = 1;
+    translate ([2*mythickness+x_start_position, 2*mythickness+y_start_position, 1])
+        rotate (180, [1,0,0])
+            linear_extrude(depth)
+            text(myversion, size = fontsize, halign="left", valign="top");
+}
+
 ///////////////////////////////////////////
 module complete_box()
+{
+    difference()
     {
-        
-    difference ()
-    {
-        difference()
+        difference ()
         {
-            create_box();
-            create_holes();
+            difference()
+            {
+                create_box();
+                create_holes();
+            }
+        create_notch(mylength, mywidth, myhight, mythickness);    
         }
-    create_notch(mylength, mywidth, myhight, mythickness);    
+        engrave_version(0,0);
     }
 }
 module complete_lid()
 {
-    translate ([mythickness/2, mythickness/2, mythickness/2])
-        plate (mylength-mythickness/2, mywidth-mythickness, mythickness); 
+    difference()
+    {
+        translate ([mythickness/2, mythickness/2, mythickness/2])
+            plate (mylength-mythickness/2, mywidth-mythickness, mythickness);
+        engrave_version();
+    }
 }
 
 ///////////////////////////////////////////
