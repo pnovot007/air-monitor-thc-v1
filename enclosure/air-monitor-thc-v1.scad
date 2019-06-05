@@ -2,7 +2,7 @@
  * Enclosure for air-monitor-thc-v1
  * 
  */
-myversion = "v0.11";
+myversion = "TH Enclosure v0.11";
 /*
  *
  */
@@ -186,6 +186,16 @@ module create_holes(){
         rotate (90, [1,0,0])
             airholes (airholes_size, mythickness*2);
 
+    translate ([mylength/2, mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
+        rotate (90, [1,0,0])
+            airholes (airholes_size*0.7, mythickness*2);
+    
+    translate ([mylength/2, mywidth-mythickness/2, airholes_size/2+(myhight-airholes_size)/2])
+        rotate (90, [1,0,0])
+            airholes (airholes_size*0.7, mythickness*2);
+
+
+
     // Front and back holes
     translate ([mythickness/2, mywidth/2, airholes_size/2+(myhight-airholes_size)/2])
         rotate (90, [0,1,0])
@@ -197,7 +207,7 @@ module create_holes(){
 
 module create_notch (length, width, hight, thickness)
 {
-    thickness_addition = 0.2;
+    thickness_addition = 0.1;
     //width_reduction = -0.2;
     translate ([thickness/2-thickness_addition, thickness/2-thickness_addition, hight+thickness/2])
         plate (length, width-thickness+2*thickness_addition, thickness+2*thickness_addition);
@@ -206,7 +216,7 @@ module create_notch (length, width, hight, thickness)
 
 module engrave_version(x_start_position=0, y_start_position=0)
 {
-    fontsize = 5;
+    fontsize = 2;
     depth = 1;
     translate ([2*mythickness+x_start_position, 2*mythickness+y_start_position, 1])
         rotate (180, [1,0,0])
