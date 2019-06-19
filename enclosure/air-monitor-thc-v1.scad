@@ -2,7 +2,7 @@
  * Enclosure for air-monitor-thc-v1
  * 
  */
-myversion = "TH Enclosure v0.11";
+myversion = "Air Sensor Box v0.11";
 /*
  *
  */
@@ -125,7 +125,7 @@ mychamber_length = 27; // Internal size of chamber
 airholes_size = min(mywidth, myhight)*0.8;
 mycable_hole_width = 12;
 mycable_hole_height = 8;
-mycable_hole_position_z = 1;
+mycable_hole_position_z = 5; // wemos without metal shield =1, with metal shield =5
 myinternal_elevation_hight = 9;
 myinternal_elevation_width = 3;
 mydevider_hight = myinternal_elevation_hight + 15; // elevation + hight of the circuit pillar element
@@ -216,7 +216,7 @@ module create_notch (length, width, hight, thickness)
 
 module engrave_version(x_start_position=0, y_start_position=0)
 {
-    fontsize = 2;
+    fontsize = 5;
     depth = 1;
     translate ([2*mythickness+x_start_position, 2*mythickness+y_start_position, 1])
         rotate (180, [1,0,0])
@@ -254,4 +254,4 @@ module complete_lid()
 ///////////////////////////////////////////
 complete_box();
 translate ([-mylength-10,0,0])
-complete_lid();
+    complete_lid();
