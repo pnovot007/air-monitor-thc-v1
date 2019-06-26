@@ -1,6 +1,6 @@
 //https://github.com/pnovot007/air-monitor-thc-v1.git
 
-bool deb= false;
+bool deb= false;  //enable serial output and debug to OLED
 
 //I2C
 #include <Wire.h>
@@ -11,35 +11,25 @@ byte error;
 const byte oled = 0x3c;
 SSD1306 display(oled, D1, D2);
 
-//LED https://github.com/Makuna/NeoPixelBus.git
-#include <NeoPixelBus.h>
-const uint16_t PixelCount = 4; // this example assumes 4 pixels, making it smaller will cause a failure
-#define colorSaturation 255
-NeoPixelBus<NeoGrbFeature, Neo800KbpsMethod> strip(PixelCount);
-RgbColor red(colorSaturation, 0, 0);
-RgbColor green(0, colorSaturation, 0);
-RgbColor blue(0, 0, colorSaturation);
-RgbColor white(colorSaturation);
-RgbColor black(0);
-//RgbColor act_color(0, 0, 0);
-uint16_t indexLed;
-int color_level; 
+//LED WS2812B https://github.com/adafruit/Adafruit_NeoPixel
+#include <Adafruit_NeoPixel.h>
+#define PIN       D8
+#define NUMPIXELS 4
+Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+int color_level;
 
-#include <NeoPixelAnimator.h>
-NeoPixelAnimator animations(PixelCount); // NeoPixel animation management object
-struct MyAnimationState
-{
-    RgbColor StartingColor;
-    RgbColor EndingColor;
-};
-MyAnimationState animationState[PixelCount];
+//piezo buzzer
+#define piezo_A D4
+#define piezo_B D5
 
 // APDS9930 proximity & ambient light https://github.com/Depau/APDS9930.git
 #include <APDS9930.h>
-APDS9930 apds = APDS9930();
-uint16_t proximity_data = 0;
-float ambient_light = 0; // can also be an unsigned long
-long hold_time=0;
+APDS9930 apds= APDS9930();
+uint16_t proximity_data= 0;
+float ambient_light= 0; // can also be an unsigned long
+long hold_time= 0;
+int hand_min= 800;
+int hand_free= 550;
 
 //CO2 SDC30 https://github.com/sparkfun/SparkFun_SCD30_Arduino_Library.git
 #include "SparkFun_SCD30_Arduino_Library.h" 
@@ -60,12 +50,11 @@ void setup() {
     Serial.println("]\n");
   } else Serial.println("OLED not found!\n");
   display.init();
-  display.setContrast(200, 255, 1);
-  delay(2000);
+  display.setContrast(255, 255, 1);
+  delay(200);
 
   //LED
-  strip.Begin();
-  SetRandomSeed();
+  pixels.begin();
 
   //APDS9930
   if ( apds.init() )
@@ -77,14 +66,19 @@ void setup() {
     if(deb) Serial.println("Light sensor is now running");
   else
     if(deb) Serial.println("Something went wrong during light sensor init!");
-  
+
   // Start running the APDS-9930 proximity sensor (no interrupts)
-  if ( apds.enableProximitySensor(false) )
+  if ( apds.enableProximitySensor(false) ){
     if(deb) Serial.println("Proximity sensor is now running");
+    // Adjust the Proximity sensor gain
+    if ( !apds.setProximityGain(PGAIN_2X) )
+      if(deb) Serial.println("Something went wrong trying to set PGAIN"); 
+  }
   else
     if(deb) Serial.println("Something went wrong during sensor init!");
-  apds.setLEDDrive(LED_DRIVE_100MA);
-  //apds.setLEDDrive(LED_DRIVE_25MA);
+  //apds.setLEDDrive(LED_DRIVE_100MA);
+  //apds.setLEDDrive(LED_DRIVE_50MA);
+  apds.setLEDDrive(LED_DRIVE_25MA);
   //apds.setLEDDrive(LED_DRIVE_12_5MA);
 
   //CO2 SDC30
@@ -102,7 +96,7 @@ void loop() {
   // Read the proximity value
   if ( apds.readProximity(proximity_data) ){
     if(deb) Serial.print("proximity: " + (String)proximity_data);
-    color_level= proximity_data / 4;
+    color_level= (proximity_data - (hand_min - hand_free)) / 2.5;
   } else
     if(deb) Serial.println("Error reading proximity value");
 
@@ -113,39 +107,40 @@ void loop() {
     if(deb) Serial.println("Error reading light values");
 
   //LED
-  if (proximity_data < 150){
+  if (proximity_data < hand_free){
     hold_time= 0;
-    led(RgbColor(0,60,0));
+    led(0,30,0);
   }
-  else if (proximity_data == 1023){
+  else if (proximity_data > hand_min){
     if (hold_time==0) hold_time= millis();
-    led(red);
+    led(255,0,0);
   }
   else {
     hold_time= 0;
-    led(RgbColor(color_level - 1, 256 - color_level, 0));
+    led(color_level - 1, 256 - color_level, 0);
   }
 
-  if (proximity_data == 1023 && hold_time != 0 && millis() - hold_time > 3000 && millis() - hold_time < 9999)
-    led_string();
-  else if (proximity_data == 1023 && hold_time != 0 && millis() - hold_time > 10000)
-    led(white);
+  if (proximity_data > hand_min && hold_time != 0 && millis() - hold_time > 1000 && millis() - hold_time < 2999)
+    beeper();
+  else if (proximity_data > hand_min && hold_time != 0 && millis() - hold_time > 3000)
+    led(255,255,255);
 
   oled_show();
   //Serial.println((String)(millis() - hold_time) + "\t" + (String)hold_time + "\t" + (String)proximity_data);
   delay(100);
 }
 
-void led(RgbColor color){
-  for (indexLed= 0; indexLed < PixelCount; indexLed++){
-    strip.SetPixelColor(indexLed, color);
-  }
-  strip.Show();
+void led(uint8_t r, uint8_t g, uint8_t b){
+  pixels.clear();
+  pixels.setPixelColor(1, pixels.Color(r, g, b));
+  pixels.setPixelColor(2, pixels.Color(r, g, b));
+  pixels.show();
 }
 
 void oled_show(){
   display.clear();
-  //display.invertDisplay();
+  display.invertDisplay();
+  display.flipScreenVertically();
   display.setFont(ArialMT_Plain_16);
   display.drawString(0, 0, "CO   :");
   display.drawString(24, 6, "2");
@@ -164,68 +159,31 @@ void oled_show(){
   display.display();
 }
 
-void led_string(){
-  for (indexLed= 0; indexLed < PixelCount; indexLed++){
-    if (animations.IsAnimating()){
-      // the normal loop just needs these two to run the active animations
-      animations.UpdateAnimations();
-      strip.Show();
-    } else {
-      // no animations runnning, start some 
-      PickRandom(0.4f); // 0.0 = black, 0.25 is normal, 0.5 is bright
-    }
-  }
-}
-
 void SetRandomSeed(){
-    uint32_t seed;
+  // random works best with a seed that can use 31 bits
+  // analogRead on a unconnected pin tends toward less than four bits
+  uint32_t seed= analogRead(0);
+  delay(1);
+  for (int shifts = 3; shifts < 31; shifts += 3) {
+      seed ^= analogRead(0) << shifts;
+      delay(1);
+  }
+  // Serial.println(seed);
+  randomSeed(seed);
+}
 
-    // random works best with a seed that can use 31 bits
-    // analogRead on a unconnected pin tends toward less than four bits
-    seed = analogRead(0);
+void beeper(){
+    pinMode(piezo_A, OUTPUT);
+    pinMode(piezo_B, OUTPUT);
+
+    for (int beeps = 0; beeps < 10; beeps += 1) {
+    digitalWrite(piezo_A, LOW);
+    digitalWrite(piezo_B, HIGH);
     delay(1);
-
-    for (int shifts = 3; shifts < 31; shifts += 3)
-    {
-        seed ^= analogRead(0) << shifts;
-        delay(1);
+    digitalWrite(piezo_A, HIGH);
+    digitalWrite(piezo_B, LOW);
+    delay(1);
     }
-
-    // Serial.println(seed);
-    randomSeed(seed);
-}
-
-// simple blend function
-void BlendAnimUpdate(const AnimationParam& param){
-    // this gets called for each animation on every time step
-    // progress will start at 0.0 and end at 1.0
-    // we use the blend function on the RgbColor to mix
-    // color based on the progress given to us in the animation
-    RgbColor updatedColor = RgbColor::LinearBlend(
-        animationState[param.index].StartingColor,
-        animationState[param.index].EndingColor,
-        param.progress);
-    // apply the color to the strip
-    strip.SetPixelColor(param.index, updatedColor);
-}
-
-void PickRandom(float luminance){
-    // pick random count of pixels to animate
-    uint16_t count = random(PixelCount);
-    while (count > 0)
-    {
-        // pick a random pixel
-        uint16_t pixel = random(PixelCount);
-
-        // pick random time and random color
-        // we use HslColor object as it allows us to easily pick a color
-        // with the same saturation and luminance 
-        uint16_t time = random(200, 600);
-        animationState[pixel].StartingColor = strip.GetPixelColor(pixel);
-        animationState[pixel].EndingColor = HslColor(random(360) / 360.0f, 1.0f, luminance);
-
-        animations.StartAnimation(pixel, time, BlendAnimUpdate);
-
-        count--;
-    }
+    pinMode(piezo_A, INPUT);
+    pinMode(piezo_B, INPUT);
 }
