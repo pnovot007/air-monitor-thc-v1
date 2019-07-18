@@ -1,0 +1,1 @@
+curl -X POST -H "Content-Type: application/json" -d @test.json http://10.80.61.100:1880/AirSensor

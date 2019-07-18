@@ -1,0 +1,20 @@
+{
+    "id": "0001",
+	"values": 
+		{
+		"temperature": 20,
+		"humidity": 50,
+		"co2": 500
+		},
+	"events": 
+		{
+		"device-in-service": true,
+		"device-touch-detected": true
+		},
+	"logs":
+		{
+		"info": "This is an info message text",
+		"event": "This an event text",
+		"warning": "This is a warning text"
+		}
+}
