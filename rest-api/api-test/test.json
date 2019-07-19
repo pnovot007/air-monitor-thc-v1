@@ -8,8 +8,8 @@
 		},
 	"events": 
 		{
-		"device-in-service": true,
-		"device-touch-detected": true
+		"device_in_service": true,
+		"device_touch_detected": true
 		},
 	"logs":
 		{
