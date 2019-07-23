@@ -2,7 +2,7 @@
  * Enclosure for air-monitor-thc-v1
  * 
  */
-myversion = "Air Sensor Box v0.11";
+myversion = "Air Sensor Box v0.12";
 /*
  *
  */
@@ -125,7 +125,7 @@ mychamber_length = 27; // Internal size of chamber
 airholes_size = min(mywidth, myhight)*0.8;
 mycable_hole_width = 12;
 mycable_hole_height = 8;
-mycable_hole_position_z = 5; // wemos without metal shield =1, with metal shield =5
+mycable_hole_position_z = 1; // wemos without metal shield =1, with metal shield =5
 myinternal_elevation_hight = 9;
 myinternal_elevation_width = 3;
 mydevider_hight = myinternal_elevation_hight + 15; // elevation + hight of the circuit pillar element
@@ -136,7 +136,7 @@ module create_box(){
     // Create outer shell
     box (mylength, mywidth, myhight, mythickness, myoverhang);
 
-    // Deviders
+    // Main deviders
     translate ([mychamber_length + mythickness/2 + mythickness, 0, 0])
         rotate (-90, [0,1,0])
             plate (mydevider_hight, mywidth, 2);
@@ -144,6 +144,19 @@ module create_box(){
     translate ([mylength - mychamber_length - (mythickness/2 + mythickness), 0, 0])
         rotate (-90, [0,1,0])
             plate (mydevider_hight, mywidth, 2);
+    
+    // additional deviders for better insulation
+    devider_offset = (mylength - 2*mychamber_length)/3 - mythickness;
+    
+    
+    translate ([mychamber_length + mythickness/2 + mythickness + devider_offset, 0, 0])
+        rotate (-90, [0,1,0])
+            plate (mydevider_hight, mywidth, 2);
+
+    translate ([mylength - mychamber_length - (mythickness/2 + mythickness) - devider_offset, 0, 0])
+        rotate (-90, [0,1,0])
+            plate (mydevider_hight, mywidth, 2);
+    
 
 
     // Internal elevators
