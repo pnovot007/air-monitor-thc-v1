@@ -1,5 +1,6 @@
 /*
- * Enclosure for air-monitor-thc-v1
+ * Enclosure for air-monitor-th-v1
+ * Suitable for Wemos/LOLIN D1 mini and SHT30 or DHT12 shield
  * 
  */
 myversion = "Air Sensor Box v0.12";
