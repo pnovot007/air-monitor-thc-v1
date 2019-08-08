@@ -1,6 +1,6 @@
 //https://github.com/pnovot007/air-monitor-thc-v1.git
 
-bool deb= false;  //enable serial output and debug to OLED
+bool deb=true;  //enable serial output and debug to OLED
 
 //I2C
 #include <Wire.h>
@@ -34,7 +34,9 @@ int hand_free= 550;
 //CO2 SDC30 https://github.com/sparkfun/SparkFun_SCD30_Arduino_Library.git
 #include "SparkFun_SCD30_Arduino_Library.h" 
 SCD30 airSensor;
-String CO2, temp, hum;
+
+String CO2_str, temp, hum;
+float CO2;
 
 void setup() {
   //I2C
@@ -88,9 +90,10 @@ void setup() {
 void loop() {
   //CO2 SDC30
   if (airSensor.dataAvailable()){
-    CO2=  (String)airSensor.getCO2();
-    temp= (String)airSensor.getTemperature();
-    hum=  (String)airSensor.getHumidity();
+    CO2 = airSensor.getCO2();
+    CO2_str = (String)CO2;
+    temp = (String)airSensor.getTemperature();
+    hum =  (String)airSensor.getHumidity();
   }
 
   // Read the proximity value
@@ -107,6 +110,7 @@ void loop() {
     if(deb) Serial.println("Error reading light values");
 
   //LED
+  /*
   if (proximity_data < hand_free){
     hold_time= 0;
     led(0,30,0);
@@ -124,10 +128,19 @@ void loop() {
     beeper();
   else if (proximity_data > hand_min && hold_time != 0 && millis() - hold_time > 3000)
     led(255,255,255);
-
+  */
+  if (CO2 < 1000) {
+    led(0,255,0); //green
+  } else if (CO2 < 5000) {  
+    led(255,255,0); //yellow     
+  } else {
+    led(255,0,0); //red
+  }
+  
+    
   oled_show();
   //Serial.println((String)(millis() - hold_time) + "\t" + (String)hold_time + "\t" + (String)proximity_data);
-  delay(100);
+  delay(1000);
 }
 
 void led(uint8_t r, uint8_t g, uint8_t b){
@@ -146,7 +159,7 @@ void oled_show(){
   display.drawString(24, 6, "2");
   display.drawString(0, 24, "t :");
   display.drawString(0, 48, "Rh :");
-  display.drawString(50, 0, CO2 + " ppm");
+  display.drawString(50, 0, CO2_str + " ppm");
   display.drawString(50, 24, temp + " °C");
   display.drawString(50, 48, hum + " %");
 
