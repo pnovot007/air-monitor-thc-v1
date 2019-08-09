@@ -6,6 +6,18 @@ bool deb=true;  //enable serial output and debug to OLED
 #include <Wire.h>
 byte error;
 
+//Wifi
+#include <ESP8266WiFi.h>
+String mac_address;
+
+// Your WiFi credentials.
+// Set password to "" for open networks.
+//char ssid[] = "";
+//char password[] = "";
+
+
+// !!! SHOULD BE CLEARED BEFORE COMMIT !!!
+
 //OLED https://github.com/squix78/esp8266-oled-ssd1306.git
 #include <SSD1306.h>
 const byte oled = 0x3c;
@@ -26,7 +38,8 @@ int color_level;
 #include <APDS9930.h>
 APDS9930 apds= APDS9930();
 uint16_t proximity_data= 0;
-float ambient_light= 0; // can also be an unsigned long
+float ambient_light = 0; // can also be an unsigned long
+String ambient_light_str;
 long hold_time= 0;
 int hand_min= 800;
 int hand_free= 550;
@@ -35,8 +48,11 @@ int hand_free= 550;
 #include "SparkFun_SCD30_Arduino_Library.h" 
 SCD30 airSensor;
 
-String CO2_str, temp, hum;
-float CO2;
+float CO2, temp, hum;
+String CO2_str, temp_str, hum_str;
+
+// JSON for sending POST to REST
+#include <ArduinoJson.h>
 
 void setup() {
   //I2C
@@ -85,15 +101,35 @@ void setup() {
 
   //CO2 SDC30
   airSensor.begin(); //This will cause readings to occur every two seconds
+
+  // Connect to the network
+  WiFi.begin(ssid, password);
+
+  Serial.print("Connecting to ");
+  Serial.print(ssid); Serial.println(" ...");
+
+  int i = 0;
+  while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
+    delay(1000);
+    Serial.print(++i); Serial.print(' ');
+  }
+
+  Serial.println('\n');
+  Serial.println("Connection established!");  
+  Serial.print("IP address: " + WiFi.localIP());
+
+  // Get own MAC address
+  mac_address = WiFi.macAddress();
+  if (deb) Serial.println("My MAC address: " + mac_address);
+
 }
 
 void loop() {
   //CO2 SDC30
   if (airSensor.dataAvailable()){
-    CO2 = airSensor.getCO2();
-    CO2_str = (String)CO2;
-    temp = (String)airSensor.getTemperature();
-    hum =  (String)airSensor.getHumidity();
+    CO2_str = (String)CO2 = airSensor.getCO2();
+    temp_str = (String)temp = airSensor.getTemperature();
+    hum_str =  (String)hum = airSensor.getHumidity();
   }
 
   // Read the proximity value
@@ -105,6 +141,7 @@ void loop() {
 
   // Read the light levels (ambient, red, green, blue)
   if ( apds.readAmbientLightLux(ambient_light) )
+    ambient_light_str = String(ambient_light);
     if(deb) Serial.println("\tambient: " + (String)ambient_light);
   else
     if(deb) Serial.println("Error reading light values");
@@ -129,6 +166,8 @@ void loop() {
   else if (proximity_data > hand_min && hold_time != 0 && millis() - hold_time > 3000)
     led(255,255,255);
   */
+
+  // Change color according the CO2 concentration
   if (CO2 < 1000) {
     led(0,255,0); //green
   } else if (CO2 < 5000) {  
@@ -140,6 +179,35 @@ void loop() {
     
   oled_show();
   //Serial.println((String)(millis() - hold_time) + "\t" + (String)hold_time + "\t" + (String)proximity_data);
+
+
+  // Create JSON data
+  StaticJsonBuffer<400> jsonBuffer;
+
+  JsonObject& root = jsonBuffer.createObject();
+
+  // Add values in the object
+  //
+  // Most of the time, you can rely on the implicit casts.
+  // In other case, you can do root.set<long>("time", 1351824120);
+  root["id"] = mac_address;
+  JsonObject& values = root.createNestedObject("values");
+  values["temperature"] = temp_str;
+  values["humidity"] = hum_str;
+  values["co2"] = CO2_str;
+  values["ambient_light"] = ambient_light_str;
+  
+  if (deb) {
+    Serial.println();
+    root.printTo(Serial);
+    Serial.println();
+    root.prettyPrintTo(Serial);
+    Serial.println();
+  }
+
+
+
+  
   delay(1000);
 }
 
@@ -160,8 +228,8 @@ void oled_show(){
   display.drawString(0, 24, "t :");
   display.drawString(0, 48, "Rh :");
   display.drawString(50, 0, CO2_str + " ppm");
-  display.drawString(50, 24, temp + " °C");
-  display.drawString(50, 48, hum + " %");
+  display.drawString(50, 24, temp_str + " °C");
+  display.drawString(50, 48, hum_str + " %");
 
   display.setFont(ArialMT_Plain_10);
   display.drawString(15, 22, (String)proximity_data);

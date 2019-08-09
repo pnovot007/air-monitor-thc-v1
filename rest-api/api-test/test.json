@@ -1,10 +1,11 @@
 {
-    "id": "0001",
+    "id": "01:23:45:67:89:AB",
 	"values": 
 		{
 		"temperature": 20,
 		"humidity": 50,
-		"co2": 500
+		"co2": 500,
+		"ambient_light": 100
 		},
 	"events": 
 		{
